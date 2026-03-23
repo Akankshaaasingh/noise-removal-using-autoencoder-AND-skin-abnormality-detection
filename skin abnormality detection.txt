@@ -1,0 +1,64 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models
+import matplotlib.pyplot as plt
+
+# Load dataset (example: using directory structure)
+train_data = tf.keras.preprocessing.image_dataset_from_directory(
+    "dataset/train",
+    image_size=(224, 224),
+    batch_size=32
+)
+
+val_data = tf.keras.preprocessing.image_dataset_from_directory(
+    "dataset/val",
+    image_size=(224, 224),
+    batch_size=32
+)
+
+# Normalize
+normalization_layer = layers.Rescaling(1./255)
+train_data = train_data.map(lambda x, y: (normalization_layer(x), y))
+val_data = val_data.map(lambda x, y: (normalization_layer(x), y))
+
+# CNN Model
+model = models.Sequential([
+    layers.Conv2D(32, (3,3), activation='relu', input_shape=(224,224,3)),
+    layers.MaxPooling2D(),
+
+    layers.Conv2D(64, (3,3), activation='relu'),
+    layers.MaxPooling2D(),
+
+    layers.Conv2D(128, (3,3), activation='relu'),
+    layers.MaxPooling2D(),
+
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(1, activation='sigmoid')  # binary classification
+])
+
+# Compile
+model.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['accuracy']
+)
+
+# Train
+history = model.fit(
+    train_data,
+    validation_data=val_data,
+    epochs=10
+)
+
+# Plot Epochs vs Error (Loss)
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Error (Loss)')
+plt.legend()
+plt.title("Epochs vs Error")
+plt.show()
+
+# Final Accuracy
+final_acc = history.history['val_accuracy'][-1]
+print("Final Validation Accuracy:", final_acc)
