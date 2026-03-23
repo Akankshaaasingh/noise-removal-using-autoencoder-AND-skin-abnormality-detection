@@ -1,1 +1,1 @@
-# skin-abnormality-detection
+# assignment applications of AI
